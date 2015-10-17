@@ -1,0 +1,58 @@
+<html>
+<head>
+    <title>Ajax Promises Experiment</title>
+</head>
+<body>
+
+<button id="request">Make request</button>
+
+<div id="modalContainer"></div>
+
+
+<script src="jquery-1.11.3.js"></script>
+<script src="wrappedAjax.js"></script>
+<script>
+
+    function modalValidate() {
+        return jQuery.Deferred(function (deferred) {
+
+            var modal = $("<div style='border:1px solid black;'><input><button>OK</button></div>").appendTo("#modalContainer");
+            var input = modal.find("input");
+
+            modal.find("button").click(function () {
+                if (input.val() == "no") {
+                    deferred.reject();
+                } else {
+                    deferred.resolve();
+                }
+
+                modal.remove();
+            });
+        });
+    }
+
+    /*modalValidate().then(function () {
+     console.log("Modal Worked");
+     }).fail(function () {
+     console.log("Modal Failed");
+     });*/
+
+    /**/
+
+    $.ajax("server.php", {
+        success: function () {
+            console.log("option success!");
+        }, complete: function (xhr) {
+            console.log("option complete!", xhr);
+        }
+    }).done(function () {
+        console.log("promise then!");
+    }).fail(function() {
+        console.log("promise fail!");
+    })
+
+</script>
+
+
+</body>
+</html>

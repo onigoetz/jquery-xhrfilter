@@ -10,7 +10,7 @@
 
 
 <script src="jquery-1.11.3.js"></script>
-<script src="wrappedAjax.js"></script>
+<script src="dist/XHRMiddleware.min.js"></script>
 <script>
 
     function modalValidate() {
@@ -31,6 +31,38 @@
         });
     }
 
+    $.ajaxRegisterMiddleware({
+        before: function (options) {
+            console.log('Middleware1, Before, Time:', Date.now(), arguments);
+        },
+        //public Function( Anything data, String textStatus, jqXHR jqXHR ) success;
+        done: function (jqXHR, data, options, deferredHelpers, next) {
+            console.log('Middleware1, Done, Time:', Date.now(), arguments);
+            next();
+        },
+        //public Function( jqXHR jqXHR, String textStatus, String errorThrown ) error;
+        fail: function (jqXHR, error, options, deferredHelpers, next) {
+            console.log('Middleware1, Fail, Time:', Date.now(), arguments);
+            next();
+        }
+    });
+
+    $.ajaxRegisterMiddleware({
+        before: function (options) {
+            console.log('Middleware2, Before, Time:', Date.now(), arguments);
+        },
+        //public Function( Anything data, String textStatus, jqXHR jqXHR ) success;
+        done: function (jqXHR, data, options, deferredHelpers, next) {
+            console.log('Middleware2, Done, Time:', Date.now(), arguments);
+            next();
+        },
+        //public Function( jqXHR jqXHR, String textStatus, String errorThrown ) error;
+        fail: function (jqXHR, error, options, deferredHelpers, next) {
+            console.log('Middleware2, Fail, Time:', Date.now(), arguments);
+            next();
+        }
+    });
+
     /*modalValidate().then(function () {
      console.log("Modal Worked");
      }).fail(function () {
@@ -48,7 +80,7 @@
             }
         }).done(function () {
             console.log("promise then!");
-        }).fail(function() {
+        }).fail(function () {
             console.log("promise fail!");
         })
     }

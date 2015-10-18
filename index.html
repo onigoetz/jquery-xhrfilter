@@ -39,18 +39,21 @@
 
     /**/
 
-    $.ajax("server.php", {
-        success: function () {
-            console.log("option success!");
-        }, complete: function (xhr) {
-            console.log("option complete!", xhr);
-        }
-    }).done(function () {
-        console.log("promise then!");
-    }).fail(function() {
-        console.log("promise fail!");
-    })
+    function run() {
+        return $.ajax("server.php", {
+            success: function () {
+                console.log("option success!");
+            }, complete: function (xhr) {
+                console.log("option complete!", xhr);
+            }
+        }).done(function () {
+            console.log("promise then!");
+        }).fail(function() {
+            console.log("promise fail!");
+        })
+    }
 
+    $("#request").click(run);
 </script>
 
 

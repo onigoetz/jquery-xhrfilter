@@ -11,18 +11,79 @@
         // Force options to be an object
         options = options || {};
 
+        var innerXHR;
+
+
+        // Emulate a jqXHR object
+        // ----------------------------------------------------------------------------
+
+        var jqXHR = {
+            readyState: 0,
+
+            // Builds headers hashtable if needed
+            getResponseHeader: function (key) {
+                return (innerXHR) ? innerXHR.getResponseHeader(key) : null;
+            },
+
+            // Raw string
+            getAllResponseHeaders: function () {
+                return (innerXHR) ? innerXHR.getAllResponseHeaders() : null;
+            },
+
+            // Caches the header
+            setRequestHeader: function (name, value) {
+                if (innerXHR) {
+                    innerXHR.setRequestHeader(name, value);
+                }
+                return this;
+            },
+
+            // Overrides response content-type header
+            overrideMimeType: function (type) {
+                //TODO :: keep this information if there is an other ajax request to do
+                if (innerXHR) {
+                    innerXHR.overrideMimeType(type);
+                }
+                return this;
+            },
+
+            // Status-dependent callbacks
+            statusCode: function (map) {
+                //TODO :: keep this information if there is an other ajax request
+                if (innerXHR) {
+                    innerXHR.statusCode(map);
+                }
+                return this;
+            },
+
+            // Cancel the request
+            abort: function (statusText) {
+                if (innerXHR) {
+                    innerXHR.statusCode(statusText);
+                } else {
+                    //TODO :: handle the case were we're between two calls
+                }
+                return this;
+            }
+        };
+
+        // Attach deferreds
+        var deferred = jQuery.Deferred();
+        deferred.promise(jqXHR);
+
 
         // Create new deferred
         // ----------------------------------------------------------------------------
 
-        var newjQXHR = $.Deferred(function (deferred) {
-            var newOpts = $.extend({}, options, {success: $.noop, error: $.noop, complete: $.noop});
+        // Copy the options to remove the callbacks
+        var newOpts = $.extend({}, options, {success: $.noop, error: $.noop, complete: $.noop});
 
-            originalAjax(url, newOpts).done(function () {
-                deferred.resolveWith(this, arguments);
-            }).fail(function () {
-                deferred.rejectWith(this, arguments);
-            });
+        innerXHR = originalAjax(url, newOpts).done(function () {
+            jqXHR.readyState = arguments[2].readyState;
+            deferred.resolveWith(this, arguments);
+        }).fail(function () {
+            jqXHR.readyState = arguments[0].readyState;
+            deferred.rejectWith(this, arguments);
         });
 
         // Rebind callbacks
@@ -30,12 +91,12 @@
 
         //public Function( Anything data, String textStatus, jqXHR jqXHR ) success;
         if (options.success) {
-            newjQXHR.done(options.success);
+            jqXHR.done(options.success);
         }
 
         //public Function( jqXHR jqXHR, String textStatus, String errorThrown ) error;
         if (options.error) {
-            newjQXHR.fail(options.error);
+            jqXHR.fail(options.error);
         }
 
         //public Function( jqXHR jqXHR, String textStatus ) complete;
@@ -44,7 +105,7 @@
             // complete can be an array, handle that case as well
             if (typeof options.complete != "function") {
                 var complete = options.complete;
-                options.complete = function() {
+                options.complete = function () {
                     for (var i in complete) {
                         if (complete.hasOwnProperty(i)) {
                             complete[i].apply(this, arguments);
@@ -53,14 +114,15 @@
                 }
             }
 
-            newjQXHR.done(function (data, textStatus, jqXHR) {
+            jqXHR.done(function (data, textStatus, jqXHR) {
                 options.complete.call(this, jqXHR, textStatus);
             });
 
-            newjQXHR.fail(options.complete);
+            jqXHR.fail(options.complete);
         }
 
-        return newjQXHR;
+        return jqXHR;
     };
+
 
 })(jQuery);

@@ -57,7 +57,7 @@
      * If the password is confirmed, will resend the original request with a new header
      */
     $.ajaxRegisterFilter({
-        fail: function (jqXHR, error, options, reject, next) {
+        fail: function (jqXHR, error, options, resolve, next) {
             console.log('Filter1, Fail', arguments);
 
             // Only handle 403's
@@ -78,7 +78,7 @@
                 options = $.extend({}, options, {headers: {'Auth-token': 'It\'s better with an auth token'}});
 
                 $.ajax(options).then(function (data, textStatus, innerXHR) {
-                    reject(data, innerXHR);
+                    resolve(data, innerXHR);
                 }, function () {
                     // Carry on if the request still failed ...
                     next();

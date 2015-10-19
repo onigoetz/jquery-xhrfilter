@@ -1,6 +1,24 @@
 <html>
 <head>
     <title>Ajax Promises Experiment</title>
+    <style>
+        #modalContainer small {
+            display: block;
+        }
+
+        #modalContainer div {
+            border: 1px solid #333;
+            background: #ddd;
+            width: 200px;
+            padding: 1em;
+        }
+
+        #modalContainer input {
+            width: 100%;
+            display: block;
+            margin-bottom: 1em;
+        }
+    </style>
 </head>
 <body>
 
@@ -8,15 +26,17 @@
 
 <div id="modalContainer"></div>
 
-
 <script src="jquery-1.11.3.js"></script>
-<script src="dist/XHRMiddleware.min.js"></script>
+<script src="dist/XHRFilter.min.js"></script>
 <script>
-
+    /**
+     * A very small implementation of a "confirm password" modal box
+     * @returns Deferred
+     */
     function modalValidate() {
         return jQuery.Deferred(function (deferred) {
 
-            var modal = $("<div style='border:1px solid black;'><input><button>OK</button></div>").appendTo("#modalContainer");
+            var modal = $("<div><p>Confirm your password <small>(any value will work, 'no' will fail)</small></p><input><button>OK</button></div>").appendTo("#modalContainer");
             var input = modal.find("input");
 
             modal.find("button").click(function () {
@@ -31,61 +51,108 @@
         });
     }
 
-    $.ajaxRegisterMiddleware({
+    /**
+     * Confirm password filter
+     * Will catch failed requests and ask a password confirmation.
+     * If the password is confirmed, will resend the original request with a new header
+     */
+    $.ajaxRegisterFilter({
+        fail: function (jqXHR, error, options, reject, next) {
+            console.log('Filter1, Fail', arguments);
+
+            // Only handle 403's
+            if (jqXHR.status != "403") {
+                next();
+                return;
+            }
+
+            // Only handle "no_auth_token" errors
+            var content = JSON.parse(jqXHR.responseText);
+            if (!content.error || content.error != 'no_auth_token') {
+                next();
+                return;
+            }
+
+            modalValidate().then(function () {
+                // Clone the options, do not mutate the original object
+                options = $.extend({}, options, {headers: {'Auth-token': 'It\'s better with an auth token'}});
+
+                $.ajax(options).then(function (data, textStatus, innerXHR) {
+                    reject(data, innerXHR);
+                }, function () {
+                    // Carry on if the request still failed ...
+                    next();
+                });
+
+            }).fail(function () {
+                // If the validation is incorrect, go back to the normal cycle of things
+                next();
+            });
+        }
+    });
+
+    /**
+     * Demo Filter
+     */
+    $.ajaxRegisterFilter({
+        /**
+         * Executed before the request, at this stage you can change headers or add parameters if you want.
+         *
+         * !!! This callback is synchronous !!!
+         *
+         * @param options
+         */
         before: function (options) {
-            console.log('Middleware1, Before, Time:', Date.now(), arguments);
+            console.log('Filter2, Before', arguments);
         },
-        //public Function( Anything data, String textStatus, jqXHR jqXHR ) success;
-        done: function (jqXHR, data, options, deferredHelpers, next) {
-            console.log('Middleware1, Done, Time:', Date.now(), arguments);
+        /**
+         * Executed after the request resolved correctly
+         *
+         * @param jqXHR
+         * @param data
+         * @param options
+         * @param reject
+         * @param next
+         */
+        done: function (jqXHR, data, options, reject, next) {
+            console.log('Filter2, Done', arguments);
             next();
         },
-        //public Function( jqXHR jqXHR, String textStatus, String errorThrown ) error;
-        fail: function (jqXHR, error, options, deferredHelpers, next) {
-            console.log('Middleware1, Fail, Time:', Date.now(), arguments);
+        /**
+         * Executed after the request failed
+         *
+         * @param jqXHR
+         * @param error
+         * @param options
+         * @param resolve
+         * @param next
+         */
+        fail: function (jqXHR, error, options, resolve, next) {
+            console.log('Filter2, Fail', arguments);
             next();
         }
     });
 
-    $.ajaxRegisterMiddleware({
-        before: function (options) {
-            console.log('Middleware2, Before, Time:', Date.now(), arguments);
-        },
-        //public Function( Anything data, String textStatus, jqXHR jqXHR ) success;
-        done: function (jqXHR, data, options, deferredHelpers, next) {
-            console.log('Middleware2, Done, Time:', Date.now(), arguments);
-            next();
-        },
-        //public Function( jqXHR jqXHR, String textStatus, String errorThrown ) error;
-        fail: function (jqXHR, error, options, deferredHelpers, next) {
-            console.log('Middleware2, Fail, Time:', Date.now(), arguments);
-            next();
-        }
-    });
-
-    /*modalValidate().then(function () {
-     console.log("Modal Worked");
-     }).fail(function () {
-     console.log("Modal Failed");
-     });*/
-
-    /**/
-
-    function run() {
+    /**
+     * A simple test Request
+     */
+    $("#request").click(function run() {
         return $.ajax("server.php", {
             success: function () {
-                console.log("option success!");
-            }, complete: function (xhr) {
-                console.log("option complete!", xhr);
+                console.log("[Original] option success!");
+            },
+            error: function () {
+                console.log("[Original] option error!");
+            },
+            complete: function () {
+                console.log("[Original] option complete!");
             }
-        }).done(function () {
-            console.log("promise then!");
+        }).done(function (data) {
+            console.log("[Original] promise then!", data);
         }).fail(function () {
-            console.log("promise fail!");
+            console.log("[Original] promise fail!");
         })
-    }
-
-    $("#request").click(run);
+    });
 </script>
 
 

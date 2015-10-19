@@ -2,10 +2,10 @@
 var webpack = require('webpack');
 
 module.exports = {
-    entry: "./lib/XHRMiddleware.js",
+    entry: "./lib/XHRFilter.js",
     output: {
         path: __dirname + "/dist",
-        filename: "XHRMiddleware.min.js"
+        filename: "XHRFilter.min.js"
     },
     module: {
         loaders: [{

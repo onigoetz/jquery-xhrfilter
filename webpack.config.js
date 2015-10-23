@@ -4,8 +4,7 @@ var webpack = require('webpack');
 module.exports = {
     entry: "./lib/XHRFilter.js",
     output: {
-        path: __dirname + "/dist",
-        filename: "XHRFilter.min.js"
+        filename: "jquery.xhrfilter.min.js"
     },
     module: {
         loaders: [{

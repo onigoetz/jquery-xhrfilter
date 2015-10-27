@@ -26,9 +26,22 @@
 
 <div id="modalContainer"></div>
 
-<script src="jquery-1.11.3.js"></script>
-<script src="dist/XHRFilter.min.js"></script>
+<script src="node_modules/pretender/node_modules/fake-xml-http-request/fake_xml_http_request.js"></script>
+<script src="node_modules/pretender/node_modules/route-recognizer/dist/route-recognizer.js"></script>
+<script src="node_modules/pretender/pretender.js"></script>
+<script src="node_modules/jquery/dist/jquery.min.js"></script>
+<script src="jquery.xhrfilter.min.js"></script>
 <script>
+    // Simulate a simple server
+    var server = new Pretender(function(){
+      this.get('server.php', function(request){
+        if (!("X-Auth-token" in request.requestHeaders)) {
+            return [403, {"Content-Type": "application/json"}, JSON.stringify({error: "no_auth_token"})];
+        }
+        return [200, {"Content-Type": "application/json"}, JSON.stringify({response: "Your settings are saved"})]
+      });
+    });
+
     /**
      * A very small implementation of a "confirm password" modal box
      * @returns Deferred
@@ -75,7 +88,7 @@
 
             modalValidate().then(function () {
                 // Clone the options, do not mutate the original object
-                options = $.extend({}, options, {headers: {'Auth-token': 'It\'s better with an auth token'}});
+                options = $.extend({}, options, {headers: {'X-Auth-token': 'It\'s better with an auth token'}});
 
                 $.ajax(options).then(function (data, textStatus, innerXHR) {
                     resolve(data, innerXHR);

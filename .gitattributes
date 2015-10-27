@@ -3,7 +3,4 @@
 /.npmignore         export-ignore
 /compile            export-ignore
 /index.html         export-ignore
-/jquery-1.11.3.js   export-ignore
-/serve              export-ignore
-/server.php         export-ignore
 /webpack.config.js  export-ignore

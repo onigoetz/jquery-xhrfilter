@@ -26,7 +26,7 @@
     "babel-runtime": "^5.8.25",
     "jquery": "^3.0.0",
     "pretender": "^0.10.1",
-    "webpack": "^1.12.2"
+    "webpack": "^2.7.0"
   },
   "main": "jquery.xhrfilter.min.js",
   "scripts": {
